@@ -1,0 +1,7 @@
+ultralytics==8.2.0
+opencv-python==4.9.0.80
+numpy==1.26.4
+filterpy==1.4.5
+scikit-image==0.22.0
+scipy==1.11.4
+matplotlib==3.8.2
