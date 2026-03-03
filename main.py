@@ -6,7 +6,7 @@ from sort import Sort
 # -------------------------------
 # LOAD CUSTOM MODEL
 # -------------------------------
-model = YOLO("runs/detect/train3/weights/best.pt")
+model = YOLO("runs/detect/train4/weights/best.pt")
 
 # -------------------------------
 # TRACKER
@@ -29,8 +29,11 @@ else:
 # -------------------------------
 count = 0
 counted_ids = set()
+previous_positions = {}
 
-line_x = 300   # 🔥 adjust based on your video
+line_y = 175   # 🔥 adjust if needed
+offset = 20
+
 frame_count = 0
 
 # -------------------------------
@@ -41,9 +44,7 @@ while cap.isOpened():
     if not ret:
         break
 
-    # ---------------------------
-    # SPEED OPTIMIZATION
-    # ---------------------------
+    # Speed optimization
     frame_count += 1
     if frame_count % 2 != 0:
         continue
@@ -60,7 +61,7 @@ while cap.isOpened():
     for box in results.boxes:
         cls_id = int(box.cls[0])
 
-        # Only jute bag class
+        # 🔥 ONLY detect jute bag (class 0)
         if cls_id != 0:
             continue
 
@@ -81,9 +82,9 @@ while cap.isOpened():
         tracks = []
 
     # ---------------------------
-    # DRAW VERTICAL LINE
+    # DRAW LINE
     # ---------------------------
-    cv2.line(frame, (line_x, 0), (line_x, frame.shape[0]), (0, 0, 255), 4)
+    cv2.line(frame, (0, line_y), (frame.shape[1], line_y), (0, 0, 255), 4)
 
     # ---------------------------
     # PROCESS TRACKS
@@ -95,7 +96,7 @@ while cap.isOpened():
         cx = int((x1 + x2) / 2)
         cy = int((y1 + y2) / 2)
 
-        # Draw box
+        # Draw bounding box
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
         cv2.putText(frame, f"ID {track_id}", (x1, y1 - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
@@ -103,15 +104,15 @@ while cap.isOpened():
         # Draw centroid
         cv2.circle(frame, (cx, cy), 5, (255, 0, 0), -1)
 
-        # Debug
-        cv2.putText(frame, f"cx:{cx}", (x1, y2 + 15),
+        # Debug centroid position
+        cv2.putText(frame, f"cy:{cy}", (x1, y2 + 15),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
         # -----------------------
-        # X-AXIS COUNTING LOGIC
+        # COUNTING LOGIC (FIXED)
         # -----------------------
         if track_id not in counted_ids:
-            if cx > line_x:
+            if cy > line_y:   # enters lower region
                 count += 1
                 counted_ids.add(track_id)
                 print(f"✅ Counted ID: {track_id}")
